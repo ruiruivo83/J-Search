@@ -1,8 +1,7 @@
 // File: FileSearchApp.java
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.io.*;
 import java.util.List;
 
@@ -61,6 +60,21 @@ class FileSearchFrame extends JFrame {
         resultList = new JList<>(resultListModel);
         JScrollPane scrollPane = new JScrollPane(resultList);
         scrollPane.setBorder(BorderFactory.createTitledBorder("Search Results"));
+
+        // Add double-click listener to open files
+        resultList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) { // Detect double-click
+                    int index = resultList.locationToIndex(e.getPoint());
+                    if (index >= 0) {
+                        String selectedFile = resultListModel.getElementAt(index);
+                        openFile(selectedFile);
+                    }
+                }
+            }
+        });
+
         add(scrollPane, BorderLayout.CENTER);
 
         // Bottom panel for buttons
@@ -94,6 +108,20 @@ class FileSearchFrame extends JFrame {
         resultListModel.clear();
         if (searchTask != null && !searchTask.isDone()) {
             searchTask.cancel(true);
+        }
+    }
+
+    private void openFile(String filePath) {
+        try {
+            if (filePath.startsWith("Found in")) {
+                filePath = filePath.substring(filePath.indexOf(":") + 2); // Extract actual file path
+            }
+            Desktop desktop = Desktop.getDesktop();
+            desktop.open(new File(filePath)); // Open file with default application
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Unable to open the file: " + filePath,
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
